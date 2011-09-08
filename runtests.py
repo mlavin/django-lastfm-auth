@@ -33,7 +33,7 @@ if not settings.configured:
         SOCIAL_AUTH_ENABLED_BACKENDS=(
             'lastfm',
         ),
-        LASTFM_KEY='XXXXXXX',
+        LASTFM_API_KEY='XXXXXXX',
         LASTFM_SECRET='XXXXXXX',
         LOGIN_REDIRECT_URL='/default/',
         SOCIAL_AUTH_LOGIN_REDIRECT_URL='/default/',
