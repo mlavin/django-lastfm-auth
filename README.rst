@@ -23,8 +23,8 @@ API Keys
 In order to use this application you must sign up for API keys on
 Last.fm. These should be put into your settings file using the settings::
 
-    LASTFM_KEY = '' # Your api key
-    MEETUP_CONSUMER_SECRET = '' # Your api secret
+    LASTFM_API_KEY = '' # Your api key
+    LASTFM_SECRET = '' # Your api secret
 
 
 Installation
