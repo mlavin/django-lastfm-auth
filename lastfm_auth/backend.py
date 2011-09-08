@@ -24,6 +24,10 @@ class LastfmBackend(SocialAuthBackend):
     name = "lastfm"
     EXTRA_DATA = [('id', 'id'), ]
 
+    def get_user_id(self, details, response):
+        """Get unique User id from response"""
+        return response['id']
+
     def get_user_details(self, response):
         """Return user details from Last.fm account"""
         full_name = response['realname'].strip()
