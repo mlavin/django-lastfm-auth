@@ -1,7 +1,7 @@
 """
 Last.fm support for Django-Social-Auth.
 
-An application must be registered first on Last.fm and the settings LASTFM_KEY
+An application must be registered first on Last.fm and the settings LASTFM_API_KEY
 and LASTFM_SECRET must be defined with they corresponding values.
 """
 
@@ -51,7 +51,7 @@ class LastfmAuth(BaseAuth):
 
     def auth_url(self):
         """Return authorization redirect url."""
-        key = getattr(settings, self.__class__.SETTINGS_KEY_NAME, '')
+        key = self.api_key()
         query = urlencode({'api_key': key})
         return '%s?%s' % (LASTFM_AUTHORIZATION_URL, query)
 
@@ -73,7 +73,7 @@ class LastfmAuth(BaseAuth):
         """Get the Last.fm session/access token via auth.getSession.""" 
         data = {
             'method': 'auth.getSession',
-            'api_key': self.api_key,
+            'api_key': self.api_key(),
             'token': token,
             'api_sig': self.method_signature('auth.getSession', token),
             'format': 'json',
@@ -91,7 +91,7 @@ class LastfmAuth(BaseAuth):
         """Request user data."""
         data = {
             'method': 'user.getinfo',
-            'api_key': self.api_key,
+            'api_key': self.api_key(),
             'token': token,
             'api_sig': self.method_signature('user.getinfo', token),
             'format': 'json',
@@ -108,8 +108,8 @@ class LastfmAuth(BaseAuth):
     def method_signature(self, method, token):
         """Generate method signature for API calls."""
         data = {
-            'key': self.api_key,
-            'secret': self.secret_key,
+            'key': self.api_key(),
+            'secret': self.secret_key(),
             'method': method,
             'token': token,
         }
@@ -119,13 +119,18 @@ class LastfmAuth(BaseAuth):
     @classmethod
     def enabled(cls):
         """Enable only if settings are defined."""
-        return self.api_key and self.secret_key
+        return cls.api_key and cls.secret_key
 
-    @property
-    def api_key(self):
-        return getattr(settings, self.__class__.SETTINGS_KEY_NAME, '')
+    @classmethod
+    def api_key(cls):
+        return getattr(settings, cls.SETTINGS_KEY_NAME, '')
 
-    @property
-    def secret_key(self):
-        return getattr(settings, self.__class__.SETTINGS_SECRET_NAME, '')
+    @classmethod
+    def secret_key(cls):
+        return getattr(settings, cls.SETTINGS_SECRET_NAME, '')
 
+
+# Backend definition
+BACKENDS = {
+    'lastfm': LastfmAuth,
+}
