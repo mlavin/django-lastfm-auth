@@ -106,6 +106,8 @@ class ContribAuthTestCase(DjangoTestCase):
         response = lastfm_user_response()
         result = LastfmBackend().authenticate(response=response, lastfm=True)
         self.assertEqual(result, user)
+        if hasattr(result, 'is_new'):
+            self.assertFalse(result.is_new)
 
     def test_authenticate_non_existing_user(self):
         """Authenticate a new user creating that user."""
