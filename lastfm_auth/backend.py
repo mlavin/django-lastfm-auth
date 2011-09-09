@@ -16,8 +16,8 @@ from django.utils import simplejson
 from social_auth.backends import BaseAuth, SocialAuthBackend, USERNAME
 
 
-LASTFM_API_SERVER = 'http://ws.audioscrobbler.com/2.0/'
-LASTFM_AUTHORIZATION_URL = 'http://www.last.fm/api/auth/'
+LASTFM_API_SERVER = 'https://ws.audioscrobbler.com/2.0/'
+LASTFM_AUTHORIZATION_URL = 'https://www.last.fm/api/auth/'
 
 
 class LastfmBackend(SocialAuthBackend):
@@ -87,10 +87,10 @@ class LastfmAuth(BaseAuth):
         url = '%s?%s' % (LASTFM_API_SERVER, query)
         try:
             response = urlopen(url).read()
-            access_token = simplejson.loads(response)['key']
+            access_token = simplejson.loads(response)['session']['key']
         except:
             access_token = ''
-        return token
+        return access_token
 
     def user_data(self, token):
         """Request user data."""

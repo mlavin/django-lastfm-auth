@@ -1,4 +1,6 @@
+from StringIO import StringIO
 from urlparse import urlparse, parse_qs
+from urllib2 import URLError
 
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -61,7 +63,7 @@ class AuthStartTestCase(DjangoTestCase):
         self.assertTrue(response.status_code, 302)
         url = response['Location']
         scheme, netloc, path, params, query, fragment = urlparse(url)
-        self.assertEqual('%s://%s%s' % (scheme, netloc, path), 'http://www.last.fm/api/auth/')
+        self.assertEqual('%s://%s%s' % (scheme, netloc, path), 'https://www.last.fm/api/auth/')
         query_data = parse_qs(query)
         self.assertEqual(query_data['api_key'][0], settings.LASTFM_API_KEY)
 
@@ -177,3 +179,135 @@ class ContribAuthTestCase(DjangoTestCase):
         self.assertTrue(result)
         if hasattr(result, 'is_new'):
             self.assertTrue(result.is_new)
+
+
+class LastfmAPITestCase(DjangoTestCase):
+    """Validate calls to the Last.fm API."""
+
+    def test_access_token_url(self):
+        """
+        Check url contruction for requesting access/session token.
+        See http://www.last.fm/api/show?service=125
+        """
+        from lastfm_auth.backend import LastfmAuth
+        with mock.patch('lastfm_auth.backend.urlopen') as urlopen:
+            urlopen.return_value = StringIO('')
+            request = mock.MagicMock()
+            redirect = 'http://example.com'
+            access_token = LastfmAuth(request, redirect).access_token('REQUESTTOKEN')
+            args, kwargs = urlopen.call_args
+            url = args[0]
+            scheme, netloc, path, params, query, fragment = urlparse(url)
+            self.assertEqual('%s://%s%s' % (scheme, netloc, path), 'https://ws.audioscrobbler.com/2.0/')
+            query_data = parse_qs(query)
+            self.assertEqual(query_data['api_key'][0], settings.LASTFM_API_KEY)
+            self.assertEqual(query_data['token'][0], 'REQUESTTOKEN')
+            self.assertEqual(query_data['method'][0], 'auth.getSession')
+            self.assertEqual(query_data['format'][0], 'json')
+
+    def test_access_token_value(self):
+        """
+        Check parsed access token value.
+        See http://www.last.fm/api/show?service=125
+        """
+        from lastfm_auth.backend import LastfmAuth
+        with mock.patch('lastfm_auth.backend.urlopen') as urlopen:
+            return_data = {
+                'session': {
+                    'name': 'MyLastFMUsername',
+                    'key': 'd580d57f32848f5dcf574d1ce18d78b2',
+                    'subscriber': 0,
+                }
+            }
+            urlopen.return_value = StringIO(simplejson.dumps(return_data))
+            request = mock.MagicMock()
+            redirect = 'http://example.com'
+            access_token = LastfmAuth(request, redirect).access_token('REQUESTTOKEN')
+            self.assertEqual(access_token, 'd580d57f32848f5dcf574d1ce18d78b2')
+
+    def test_access_token_upstream_failure(self):
+        """
+        Check handling upstream failures from Last.fm.
+        See http://www.last.fm/api/show?service=125
+        """
+        from lastfm_auth.backend import LastfmAuth
+        
+        with mock.patch('lastfm_auth.backend.urlopen') as urlopen:
+            urlopen.side_effect = URLError('Fake URL error')
+            request = mock.MagicMock()
+            redirect = 'http://example.com'
+            access_token = LastfmAuth(request, redirect).access_token('REQUESTTOKEN')
+            self.assertFalse(access_token)
+
+    def test_access_token_bad_data(self):
+        """
+        Handle bad data when requesting access/session token.
+        See http://www.last.fm/api/show?service=125
+        """
+        from lastfm_auth.backend import LastfmAuth
+        with mock.patch('lastfm_auth.backend.urlopen') as urlopen:
+            urlopen.return_value = StringIO('')
+            request = mock.MagicMock()
+            redirect = 'http://example.com'
+            access_token = LastfmAuth(request, redirect).access_token('REQUESTTOKEN')
+            self.assertFalse(access_token)
+
+    def test_user_data_url(self):
+        """
+        Check url contruction for requesting user data.
+        See http://www.last.fm/api/show?service=344
+        """
+        from lastfm_auth.backend import LastfmAuth
+        with mock.patch('lastfm_auth.backend.urlopen') as urlopen:
+            urlopen.return_value = StringIO('')
+            request = mock.MagicMock()
+            redirect = 'http://example.com'
+            user_data = LastfmAuth(request, redirect).user_data('SESSIONTOKEN')
+            args, kwargs = urlopen.call_args
+            url = args[0]
+            scheme, netloc, path, params, query, fragment = urlparse(url)
+            self.assertEqual('%s://%s%s' % (scheme, netloc, path), 'https://ws.audioscrobbler.com/2.0/')
+            query_data = parse_qs(query)
+            self.assertEqual(query_data['api_key'][0], settings.LASTFM_API_KEY)
+            self.assertEqual(query_data['method'][0], 'user.getinfo')
+            self.assertEqual(query_data['format'][0], 'json')
+
+    def test_user_data_value(self):
+        """
+        Check return value for requesting user data.
+        See http://www.last.fm/api/show?service=344
+        """
+        from lastfm_auth.backend import LastfmAuth
+        with mock.patch('lastfm_auth.backend.urlopen') as urlopen:
+            return_data = {'user': lastfm_user_response()}
+            urlopen.return_value = StringIO(simplejson.dumps(return_data))
+            request = mock.MagicMock()
+            redirect = 'http://example.com'
+            user_data = LastfmAuth(request, redirect).user_data('SESSIONTOKEN')
+            self.assertEqual(user_data, lastfm_user_response())
+
+    def test_user_data_upstream_failure(self):
+        """
+        Handle upstream errors when requesting user data.
+        See http://www.last.fm/api/show?service=344
+        """
+        from lastfm_auth.backend import LastfmAuth
+        with mock.patch('lastfm_auth.backend.urlopen') as urlopen:
+            urlopen.side_effect = URLError('Fake URL error')
+            request = mock.MagicMock()
+            redirect = 'http://example.com'
+            user_data = LastfmAuth(request, redirect).user_data('SESSIONTOKEN')
+            self.assertEqual(user_data, None)
+
+    def test_user_data_bad_data(self):
+        """
+        Bad return data when requesting user data.
+        See http://www.last.fm/api/show?service=344
+        """
+        from lastfm_auth.backend import LastfmAuth
+        with mock.patch('lastfm_auth.backend.urlopen') as urlopen:
+            urlopen.return_value = StringIO('')
+            request = mock.MagicMock()
+            redirect = 'http://example.com'
+            user_data = LastfmAuth(request, redirect).user_data('SESSIONTOKEN')
+            self.assertEqual(user_data, None)
