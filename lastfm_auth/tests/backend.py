@@ -127,6 +127,11 @@ class AuthCompleteTestCase(DjangoTestCase):
         response = self.client.get(self.complete_url, data)
         self.assertRedirects(response, LOGIN_ERROR_URL)
 
+    def test_no_token(self):
+        """Failed auth due to no token."""
+        response = self.client.get(self.complete_url)
+        self.assertRedirects(response, LOGIN_ERROR_URL)
+
 
 class ContribAuthTestCase(DjangoTestCase):
     """Validate contrib.auth calls."""
