@@ -10,6 +10,7 @@ from urllib import urlencode
 from urllib2 import urlopen
 
 from django.conf import settings
+from django.contrib.auth import authenticate
 from django.utils import simplejson
 
 from social_auth.backends import BaseAuth, SocialAuthBackend, USERNAME
@@ -61,7 +62,7 @@ class LastfmAuth(BaseAuth):
 
     def auth_complete(self, *args, **kwargs):
         """Return user from authenticate."""
-        token = self.get.get('token')
+        token = self.data.get('token')
         if not token:
             raise ValueError('No token returned')
 
@@ -106,7 +107,7 @@ class LastfmAuth(BaseAuth):
             response = urlopen(url).read()
             user_data = simplejson.loads(response)['user']
         except:
-            user_data = {}
+            user_data = None
         return user_data
 
     def method_signature(self, method, token):

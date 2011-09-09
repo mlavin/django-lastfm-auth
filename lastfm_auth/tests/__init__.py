@@ -1,1 +1,2 @@
-from lastfm_auth.tests.backend import AuthStartTestCase, ContribAuthTestCase
+from lastfm_auth.tests.backend import AuthStartTestCase, AuthCompleteTestCase
+from lastfm_auth.tests.backend import ContribAuthTestCase

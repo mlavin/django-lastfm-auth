@@ -66,6 +66,66 @@ class AuthStartTestCase(DjangoTestCase):
         self.assertEqual(query_data['api_key'][0], settings.LASTFM_API_KEY)
 
 
+class AuthCompleteTestCase(DjangoTestCase):
+    """Complete login process from Last.fm."""
+
+    def setUp(self):
+        self.complete_url = reverse(COMPLETE_URL_NAME, kwargs={'backend': 'lastfm'})
+        self.access_token_patch = mock.patch('lastfm_auth.backend.LastfmAuth.access_token')
+        self.access_token_mock = self.access_token_patch.start()
+        self.access_token_mock.return_value = 'FAKETOKEN'
+        self.user_data_patch = mock.patch('lastfm_auth.backend.LastfmAuth.user_data')
+        self.user_data_mock = self.user_data_patch.start()
+        fake_data = lastfm_user_response()
+        self.user_data_mock.return_value = fake_data
+
+    def tearDown(self):
+        self.access_token_patch.stop()
+        self.user_data_patch.stop()
+
+    def test_new_user(self):
+        """Login for the first time via Meetup."""
+        data = {'token': 'FAKEKEY'}
+        response = self.client.get(self.complete_url, data)
+        self.assertRedirects(response, NEW_USER_REDIRECT)
+
+    def test_new_user_name(self):
+        """Check the name set on the newly created user."""
+        data = {'token': 'FAKEKEY'}
+        self.client.get(self.complete_url, data)
+        new_user = User.objects.latest('id')
+        self.assertEqual(new_user.first_name, "Richard")
+        self.assertEqual(new_user.last_name, "Jones")
+
+    def test_single_name(self):
+        """Process a user with a single word name."""
+        fake_data = lastfm_user_response()
+        fake_data['realname'] = "Cher"
+        self.user_data_mock.return_value = fake_data
+        data = {'token': 'FAKEKEY'}
+        self.client.get(self.complete_url, data)
+        new_user = User.objects.latest('id')
+        self.assertEqual(new_user.first_name, "Cher")
+        self.assertEqual(new_user.last_name, "")
+
+    def test_existing_user(self):
+        """Login with an existing user via Meetup."""
+        user = User.objects.create_user(username='test', password='test', email='')
+        social_user = UserSocialAuth.objects.create(
+            user=user, provider='lastfm', uid='1000002'
+        )
+        data = {'token': 'FAKEKEY'}
+        response = self.client.get(self.complete_url, data)
+        self.assertRedirects(response, DEFAULT_REDIRECT)
+
+    def test_failed_authentication(self):
+        """Failed authentication. Bad data from Meetup."""
+        self.user_data_mock.return_value = None
+        data = {'token': 'FAKEKEY'}
+        response = self.client.get(self.complete_url, data)
+        self.assertRedirects(response, LOGIN_ERROR_URL)
+
+
 class ContribAuthTestCase(DjangoTestCase):
     """Validate contrib.auth calls."""
     
