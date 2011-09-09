@@ -66,8 +66,8 @@ class LastfmAuth(BaseAuth):
         if not token:
             raise ValueError('No token returned')
 
-        access_token = self.access_token(token)
-        data = self.user_data(access_token)
+        username, access_token = self.access_token(token)
+        data = self.user_data(username)
         if data is not None:
             data['access_token'] = access_token
 
@@ -87,18 +87,20 @@ class LastfmAuth(BaseAuth):
         url = '%s?%s' % (LASTFM_API_SERVER, query)
         try:
             response = urlopen(url).read()
-            access_token = simplejson.loads(response)['session']['key']
+            session = simplejson.loads(response)['session']
+            access_token = session['key']
+            username = session['name']
         except:
             access_token = ''
-        return access_token
+            username = ''
+        return (username, access_token)
 
-    def user_data(self, token):
+    def user_data(self, username):
         """Request user data."""
         data = {
             'method': 'user.getinfo',
             'api_key': self.api_key(),
-            'token': token,
-            'api_sig': self.method_signature('user.getinfo', token),
+            'user': username,
             'format': 'json',
         }
         query = urlencode(data)

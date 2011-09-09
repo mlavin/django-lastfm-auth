@@ -75,7 +75,7 @@ class AuthCompleteTestCase(DjangoTestCase):
         self.complete_url = reverse(COMPLETE_URL_NAME, kwargs={'backend': 'lastfm'})
         self.access_token_patch = mock.patch('lastfm_auth.backend.LastfmAuth.access_token')
         self.access_token_mock = self.access_token_patch.start()
-        self.access_token_mock.return_value = 'FAKETOKEN'
+        self.access_token_mock.return_value = ('USERNAME', 'FAKETOKEN')
         self.user_data_patch = mock.patch('lastfm_auth.backend.LastfmAuth.user_data')
         self.user_data_mock = self.user_data_patch.start()
         fake_data = lastfm_user_response()
@@ -227,7 +227,8 @@ class LastfmAPITestCase(DjangoTestCase):
             urlopen.return_value = StringIO(simplejson.dumps(return_data))
             request = mock.MagicMock()
             redirect = 'http://example.com'
-            access_token = LastfmAuth(request, redirect).access_token('REQUESTTOKEN')
+            username, access_token = LastfmAuth(request, redirect).access_token('REQUESTTOKEN')
+            self.assertEqual(username, 'MyLastFMUsername')
             self.assertEqual(access_token, 'd580d57f32848f5dcf574d1ce18d78b2')
 
     def test_access_token_upstream_failure(self):
@@ -241,7 +242,8 @@ class LastfmAPITestCase(DjangoTestCase):
             urlopen.side_effect = URLError('Fake URL error')
             request = mock.MagicMock()
             redirect = 'http://example.com'
-            access_token = LastfmAuth(request, redirect).access_token('REQUESTTOKEN')
+            username, access_token = LastfmAuth(request, redirect).access_token('REQUESTTOKEN')
+            self.assertFalse(username)
             self.assertFalse(access_token)
 
     def test_access_token_bad_data(self):
@@ -254,7 +256,8 @@ class LastfmAPITestCase(DjangoTestCase):
             urlopen.return_value = StringIO('')
             request = mock.MagicMock()
             redirect = 'http://example.com'
-            access_token = LastfmAuth(request, redirect).access_token('REQUESTTOKEN')
+            username, access_token = LastfmAuth(request, redirect).access_token('REQUESTTOKEN')
+            self.assertFalse(username)
             self.assertFalse(access_token)
 
     def test_user_data_url(self):
@@ -267,7 +270,7 @@ class LastfmAPITestCase(DjangoTestCase):
             urlopen.return_value = StringIO('')
             request = mock.MagicMock()
             redirect = 'http://example.com'
-            user_data = LastfmAuth(request, redirect).user_data('SESSIONTOKEN')
+            user_data = LastfmAuth(request, redirect).user_data('UserName')
             args, kwargs = urlopen.call_args
             url = args[0]
             scheme, netloc, path, params, query, fragment = urlparse(url)
@@ -288,7 +291,7 @@ class LastfmAPITestCase(DjangoTestCase):
             urlopen.return_value = StringIO(simplejson.dumps(return_data))
             request = mock.MagicMock()
             redirect = 'http://example.com'
-            user_data = LastfmAuth(request, redirect).user_data('SESSIONTOKEN')
+            user_data = LastfmAuth(request, redirect).user_data('UserName')
             self.assertEqual(user_data, lastfm_user_response())
 
     def test_user_data_upstream_failure(self):
@@ -301,7 +304,7 @@ class LastfmAPITestCase(DjangoTestCase):
             urlopen.side_effect = URLError('Fake URL error')
             request = mock.MagicMock()
             redirect = 'http://example.com'
-            user_data = LastfmAuth(request, redirect).user_data('SESSIONTOKEN')
+            user_data = LastfmAuth(request, redirect).user_data('UserName')
             self.assertEqual(user_data, None)
 
     def test_user_data_bad_data(self):
@@ -314,5 +317,5 @@ class LastfmAPITestCase(DjangoTestCase):
             urlopen.return_value = StringIO('')
             request = mock.MagicMock()
             redirect = 'http://example.com'
-            user_data = LastfmAuth(request, redirect).user_data('SESSIONTOKEN')
+            user_data = LastfmAuth(request, redirect).user_data('UserName')
             self.assertEqual(user_data, None)
