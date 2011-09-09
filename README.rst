@@ -55,7 +55,7 @@ Once you have the app installed you must include in your settings::
 
     AUTHENTICATION_BACKENDS = (
         ...
-        'lastfm_auth.backend.MeetupBackend',
+        'lastfm_auth.backend.LastfmBackend',
         ...
     )
 
