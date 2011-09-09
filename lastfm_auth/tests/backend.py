@@ -86,7 +86,7 @@ class AuthCompleteTestCase(DjangoTestCase):
         self.user_data_patch.stop()
 
     def test_new_user(self):
-        """Login for the first time via Meetup."""
+        """Login for the first time via Last.fm."""
         data = {'token': 'FAKEKEY'}
         response = self.client.get(self.complete_url, data)
         self.assertRedirects(response, NEW_USER_REDIRECT)
@@ -111,7 +111,7 @@ class AuthCompleteTestCase(DjangoTestCase):
         self.assertEqual(new_user.last_name, "")
 
     def test_existing_user(self):
-        """Login with an existing user via Meetup."""
+        """Login with an existing user via Last.fm."""
         user = User.objects.create_user(username='test', password='test', email='')
         social_user = UserSocialAuth.objects.create(
             user=user, provider='lastfm', uid='1000002'
@@ -121,7 +121,7 @@ class AuthCompleteTestCase(DjangoTestCase):
         self.assertRedirects(response, DEFAULT_REDIRECT)
 
     def test_failed_authentication(self):
-        """Failed authentication. Bad data from Meetup."""
+        """Failed authentication. Bad data from Last.fm."""
         self.user_data_mock.return_value = None
         data = {'token': 'FAKEKEY'}
         response = self.client.get(self.complete_url, data)

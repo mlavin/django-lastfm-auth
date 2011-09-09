@@ -5,7 +5,7 @@ django-lastfm-auth is an extension to django-social-auth which adds a backend fo
 __version_info__ = {
     'major': 0,
     'minor': 1,
-    'micro': 0,
+    'micro': 1,
     'releaselevel': 'final',
 }
 
