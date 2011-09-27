@@ -27,6 +27,16 @@ Last.fm. These should be put into your settings file using the settings::
     LASTFM_SECRET = '' # Your api secret
 
 
+Extra data
+-------------------------------
+
+Similar to the other OAuth backends you can define
+
+    LASTFM_EXTRA_DATA = [('realname', 'realname'), ]
+
+as a list of tuples (response name, alias) to store on the UserSocialAuth model.
+
+
 Installation
 -------------------------------
 
