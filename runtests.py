@@ -27,6 +27,7 @@ if not settings.configured:
             'lastfm_auth.backend.LastfmBackend',
             'django.contrib.auth.backends.ModelBackend',
         ),
+        SITE_ID=1,
         SOCIAL_AUTH_IMPORT_BACKENDS=(
             'lastfm_auth',
         ),
