@@ -39,7 +39,7 @@ class LastfmBackend(SocialAuthBackend):
             first_name = full_name
             last_name = ''
         data = {
-            USERNAME: response['id'],
+            USERNAME: response.get('name', ''),
             'email': '',
             'fullname': full_name,
             'first_name': first_name,
