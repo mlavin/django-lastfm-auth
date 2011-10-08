@@ -67,6 +67,28 @@ class AuthStartTestCase(DjangoTestCase):
         query_data = parse_qs(query)
         self.assertEqual(query_data['api_key'][0], settings.LASTFM_API_KEY)
 
+    def test_callback(self):
+        """Check callback sent to Last.fm."""
+        response = self.client.get(self.login_url)
+        url = response['Location']
+        scheme, netloc, path, params, query, fragment = urlparse(url)
+        query_data = parse_qs(query)
+        callback = reverse(COMPLETE_URL_NAME, kwargs={'backend': 'lastfm'})
+        self.assertTrue(query_data['cb'][0].endswith(callback))
+        self.assertTrue(query_data['cb'][0].startswith('http:'))
+
+    def test_https_callback(self):
+        """
+        Convert https callbacks to http due to Last.fm bug.
+        See http://www.last.fm/group/Last.fm+Web+Services/forum/21604/_/633280
+        """
+        response = self.client.get(self.login_url, **{'wsgi.url_scheme': 'https'})
+        url = response['Location']
+        scheme, netloc, path, params, query, fragment = urlparse(url)
+        query_data = parse_qs(query)
+        callback = reverse(COMPLETE_URL_NAME, kwargs={'backend': 'lastfm'})
+        self.assertTrue(query_data['cb'][0].startswith('http:'))
+
 
 class AuthCompleteTestCase(DjangoTestCase):
     """Complete login process from Last.fm."""
