@@ -4,6 +4,13 @@ Django-Lastfm-Auth Changes
 History of releases and changes to the Django-Lastfm-Auth project.
 
 
+v0.2.3
+-------------------------------
+
+HTTPS callbacks are converted to HTTP to work around issue with Last.fm API.
+See https://github.com/mlavin/django-lastfm-auth/issues/5 for more detail.
+
+
 v0.2.2
 -------------------------------
 
