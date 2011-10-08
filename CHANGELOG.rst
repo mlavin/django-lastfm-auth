@@ -4,6 +4,12 @@ Django-Lastfm-Auth Changes
 History of releases and changes to the Django-Lastfm-Auth project.
 
 
+v0.2.2
+-------------------------------
+
+Fix association by passing callback url
+
+
 v0.2.1
 -------------------------------
 
