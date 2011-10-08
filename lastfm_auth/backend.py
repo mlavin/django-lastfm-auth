@@ -6,6 +6,7 @@ and LASTFM_SECRET must be defined with they corresponding values.
 """
 
 from hashlib import md5
+from re import sub
 from urllib import urlencode
 from urllib2 import urlopen
 
@@ -65,6 +66,7 @@ class LastfmAuth(BaseAuth):
         """Return authorization redirect url."""
         key = self.api_key()
         callback = self.request.build_absolute_uri(self.redirect)
+        callback = sub(r'^https', u'http', callback)
         query = urlencode({'api_key': key, 'cb': callback})
         return '%s?%s' % (LASTFM_AUTHORIZATION_URL, query)
 
