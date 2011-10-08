@@ -64,7 +64,8 @@ class LastfmAuth(BaseAuth):
     def auth_url(self):
         """Return authorization redirect url."""
         key = self.api_key()
-        query = urlencode({'api_key': key})
+        callback = self.request.build_absolute_uri(self.redirect)
+        query = urlencode({'api_key': key, 'cb': callback})
         return '%s?%s' % (LASTFM_AUTHORIZATION_URL, query)
 
     def auth_complete(self, *args, **kwargs):
