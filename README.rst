@@ -8,6 +8,14 @@ If you are looking for a stand alone Last.fm authentication backend then please
 check out `django-lastfmauth <http://pypi.python.org/pypi/django-lastfmauth/>`_.
 
 
+Development Status
+-------------------------------
+
+The development of this backend has stopped and it is not expected to be maintained
+in the future. If you are interested in picking up the development of this project
+please let me know.
+
+
 Requirements
 -------------------------------
 
